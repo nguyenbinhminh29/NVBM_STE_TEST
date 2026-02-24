@@ -48,7 +48,7 @@ public class InventoryController : ControllerBase
             return BadRequest(APIResponse<bool>.Fail("Header Idempotency-Key is required."));
         }
 
-        var command = new ReserveInventoryCommand(id, dto.Quantity, idempotencyKey);
+        var command = new ReserveInventoryCommand(id, dto.UomId, dto.Quantity, idempotencyKey);
         
         var result = await _mediator.Send(command);
         
@@ -59,4 +59,4 @@ public class InventoryController : ControllerBase
 }
 
 public record UpdateInventoryRequest(decimal Delta);
-public record ReserveInventoryRequest(decimal Quantity);
+public record ReserveInventoryRequest(Guid UomId, decimal Quantity);

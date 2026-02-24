@@ -70,12 +70,15 @@ public class ProductCatalogService : IProductCatalogService
                 Sku = p.Sku,
                 Name = p.Name,
                 Description = p.Description,
-                Uoms = p.Uoms.Select(u => new ProductUomDto
+                BaseUom = p.Uoms.Any(u => u.ConversionFactor == 1m) ? p.Uoms.FirstOrDefault(u => u.ConversionFactor == 1m)!.UomCode : string.Empty,
+                AvailableUnits = p.Uoms.Select(u => new ProductUomDto
                 {
                     Id = u.Id,
                     UomCode = u.UomCode,
                     UomName = u.UomName,
-                    Price = u.Price
+                    Price = u.Price,
+                    ConversionFactor = u.ConversionFactor,
+                    IsDefault = u.ConversionFactor == 1m
                 }).ToList(),
                 Attributes = p.Attributes.Select(a => new ProductAttributeDto
                 {

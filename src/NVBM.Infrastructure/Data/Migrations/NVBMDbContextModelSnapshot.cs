@@ -38,7 +38,7 @@ namespace NVBM.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("NVBM.Domain.Entities.InventoryLevel", b =>
@@ -62,7 +62,7 @@ namespace NVBM.Infrastructure.Data.Migrations
 
                     b.HasKey("ProductId");
 
-                    b.ToTable("InventoryLevels");
+                    b.ToTable("InventoryLevels", (string)null);
                 });
 
             modelBuilder.Entity("NVBM.Domain.Entities.Product", b =>
@@ -105,7 +105,7 @@ namespace NVBM.Infrastructure.Data.Migrations
                     b.HasIndex("Sku")
                         .IsUnique();
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("NVBM.Domain.Entities.ProductAttribute", b =>
@@ -131,7 +131,7 @@ namespace NVBM.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductAttributes");
+                    b.ToTable("ProductAttributes", (string)null);
                 });
 
             modelBuilder.Entity("NVBM.Domain.Entities.ProductBarcode", b =>
@@ -152,7 +152,7 @@ namespace NVBM.Infrastructure.Data.Migrations
 
                     b.HasIndex("UomId");
 
-                    b.ToTable("ProductBarcodes");
+                    b.ToTable("ProductBarcodes", (string)null);
                 });
 
             modelBuilder.Entity("NVBM.Domain.Entities.ProductUom", b =>
@@ -191,7 +191,7 @@ namespace NVBM.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductUoms");
+                    b.ToTable("ProductUoms", (string)null);
                 });
 
             modelBuilder.Entity("NVBM.Domain.Entities.InventoryLevel", b =>

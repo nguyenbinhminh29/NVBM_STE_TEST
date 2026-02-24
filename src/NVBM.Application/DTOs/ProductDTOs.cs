@@ -59,7 +59,8 @@ public record ProductDetailDto
     public string Sku { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
-    public List<ProductUomDto> Uoms { get; init; } = new();
+    public string BaseUom { get; init; } = string.Empty;
+    public List<ProductUomDto> AvailableUnits { get; init; } = new();
     public List<ProductAttributeDto> Attributes { get; init; } = new();
 }
 
@@ -69,6 +70,8 @@ public record ProductUomDto
     public string UomCode { get; init; } = string.Empty;
     public string UomName { get; init; } = string.Empty;
     public decimal Price { get; init; }
+    public decimal ConversionFactor { get; init; }
+    public bool IsDefault { get; init; }
 }
 
 public record ProductAttributeDto

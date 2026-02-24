@@ -11,6 +11,7 @@ public record UpdateInventoryCommand(
 
 public record ReserveInventoryCommand(
     Guid ProductId,
+    Guid UomId,
     decimal Quantity,
     string IdempotencyKey
 ) : IRequest<APIResponse<bool>>;

@@ -55,18 +55,26 @@ public class ReserveInventoryCommandHandler : IRequestHandler<ReserveInventoryCo
             return APIResponse<bool>.Ok(true, "Request already processed (Idempotent).");
         }
 
-        // 2. Process Reserve
+        // 2. Process Reserve & Multi-UOM Logic
+        var productUom = await _dbContext.ProductUoms
+            .FirstOrDefaultAsync(u => u.Id == request.UomId && u.ProductId == request.ProductId, cancellationToken);
+            
+        if (productUom == null)
+            return APIResponse<bool>.Fail("Invalid UOM for this product.");
+            
+        var baseQuantityToReserve = request.Quantity * productUom.ConversionFactor;
+
         var inventory = await _dbContext.InventoryLevels
             .FirstOrDefaultAsync(i => i.ProductId == request.ProductId, cancellationToken);
 
         if (inventory == null)
             return APIResponse<bool>.Fail("Inventory record not found.");
 
-        if (inventory.AvailableQuantity < request.Quantity)
+        if (inventory.AvailableQuantity < baseQuantityToReserve)
             return APIResponse<bool>.Fail("Not enough available quantity.");
 
-        inventory.AvailableQuantity -= request.Quantity;
-        inventory.ReservedQuantity += request.Quantity;
+        inventory.AvailableQuantity -= baseQuantityToReserve;
+        inventory.ReservedQuantity += baseQuantityToReserve;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
