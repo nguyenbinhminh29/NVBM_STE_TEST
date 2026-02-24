@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>3747a38c-8a76-46cf-804f-fde0d6b9c273</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.1.1" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.1.1" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NVBM.Catalog.API\NVBM.Catalog.API.csproj" />
+    <ProjectReference Include="..\NVBM.Barcode.API\NVBM.Barcode.API.csproj" />
+    <ProjectReference Include="..\NVBM.Gateway\NVBM.Gateway.csproj" />
+  </ItemGroup>
+
+</Project>
