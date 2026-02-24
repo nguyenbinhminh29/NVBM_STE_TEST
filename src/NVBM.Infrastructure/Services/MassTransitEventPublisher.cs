@@ -1,21 +1,21 @@
-using MassTransit;
+using Wolverine;
 using NVBM.Application.Interfaces;
 
 namespace NVBM.Infrastructure.Services;
 
 public record ProductChangedEvent(Guid ProductId, string ChangeType);
 
-public class MassTransitEventPublisher : IEventPublisher
+public class WolverineEventPublisher : IEventPublisher
 {
-    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IMessageBus _bus;
 
-    public MassTransitEventPublisher(IPublishEndpoint publishEndpoint)
+    public WolverineEventPublisher(IMessageBus bus)
     {
-        _publishEndpoint = publishEndpoint;
+        _bus = bus;
     }
 
     public async Task PublishProductChangedEventAsync(Guid productId, string changeType)
     {
-        await _publishEndpoint.Publish(new ProductChangedEvent(productId, changeType));
+        await _bus.PublishAsync(new ProductChangedEvent(productId, changeType));
     }
 }

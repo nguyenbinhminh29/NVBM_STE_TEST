@@ -2,8 +2,17 @@ using NVBM.Application.Interfaces;
 using NVBM.Infrastructure.Data;
 using NVBM.Infrastructure.Services;
 using Scalar.AspNetCore;
+using Serilog;
+using NVBM.Barcode.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog Configuration
+builder.Host.UseSerilog((context, loggerConfig) => 
+{
+    loggerConfig.ReadFrom.Configuration(context.Configuration);
+    loggerConfig.WriteTo.Console();
+});
 
 // Aspire Service Defaults
 builder.AddServiceDefaults();
@@ -38,6 +47,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseOutputCache();

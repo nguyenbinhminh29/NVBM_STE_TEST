@@ -8,9 +8,19 @@ using NVBM.Catalog.API.Extensions;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using NVBM.Application.DTOs;
-using MassTransit;
+using Wolverine;
+using Wolverine.FluentValidation;
+using Serilog;
+using NVBM.Catalog.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog Configuration
+builder.Host.UseSerilog((context, loggerConfig) => 
+{
+    loggerConfig.ReadFrom.Configuration(context.Configuration);
+    loggerConfig.WriteTo.Console();
+});
 
 // Aspire Service Defaults
 builder.AddServiceDefaults();
@@ -36,17 +46,15 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
-builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
+builder.Services.AddScoped<IProductRepository, NVBM.Infrastructure.Repositories.ProductRepository>();
+builder.Services.AddScoped<IEventPublisher, WolverineEventPublisher>();
 builder.Services.AddScoped<IProductCatalogService, ProductCatalogService>();
 
-// MassTransit
-builder.Services.AddMassTransit(x =>
+// Wolverine
+builder.Host.UseWolverine(opts => 
 {
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host(builder.Configuration.GetConnectionString("messaging") ?? "localhost");
-        cfg.ConfigureEndpoints(context);
-    });
+    opts.UseFluentValidation();
+    // Configure rabbitmq or endpoints later
 });
 
 builder.Services.AddControllers();
@@ -70,6 +78,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseOutputCache();

@@ -1,7 +1,7 @@
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using NVBM.Application.DTOs;
 using NVBM.Application.Features.Inventory.Commands;
+using Wolverine;
 
 namespace NVBM.Inventory.API.Controllers;
 
@@ -9,11 +9,11 @@ namespace NVBM.Inventory.API.Controllers;
 [Route("api/v1/Products/{id:guid}/inventory")]
 public class InventoryController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IMessageBus _bus;
 
-    public InventoryController(IMediator mediator)
+    public InventoryController(IMessageBus bus)
     {
-        _mediator = mediator;
+        _bus = bus;
     }
 
     [HttpPut]
@@ -30,7 +30,7 @@ public class InventoryController : ControllerBase
         var rowVersion = Convert.FromBase64String(rowVersionBase64);
         var command = new UpdateInventoryCommand(id, dto.Delta, rowVersion);
         
-        var result = await _mediator.Send(command);
+        var result = await _bus.InvokeAsync<APIResponse<bool>>(command);
         
         if (!result.Success) return BadRequest(result);
         
@@ -50,7 +50,7 @@ public class InventoryController : ControllerBase
 
         var command = new ReserveInventoryCommand(id, dto.UomId, dto.Quantity, idempotencyKey);
         
-        var result = await _mediator.Send(command);
+        var result = await _bus.InvokeAsync<APIResponse<bool>>(command);
         
         if (!result.Success) return BadRequest(result);
         

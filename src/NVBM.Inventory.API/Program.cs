@@ -1,3 +1,6 @@
+using Wolverine;
+using Wolverine.FluentValidation;
+using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using NVBM.Infrastructure.Data;
@@ -5,6 +8,13 @@ using Scalar.AspNetCore;
 using NVBM.Inventory.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog Configuration
+builder.Host.UseSerilog((context, loggerConfig) => 
+{
+    loggerConfig.ReadFrom.Configuration(context.Configuration);
+    loggerConfig.WriteTo.Console();
+});
 
 // Aspire Service Defaults
 builder.AddServiceDefaults();
@@ -26,13 +36,16 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// MediatR
-builder.Services.AddMediatR(cfg => 
+
+// Wolverine
+builder.Host.UseWolverine(opts => 
 {
-    cfg.RegisterServicesFromAssembly(typeof(NVBM.Application.Features.Inventory.Commands.UpdateInventoryCommand).Assembly);
-    cfg.RegisterServicesFromAssembly(typeof(NVBM.Infrastructure.Features.Inventory.Handlers.UpdateInventoryCommandHandler).Assembly);
+    opts.UseFluentValidation();
+    opts.Discovery.IncludeAssembly(typeof(NVBM.Application.Features.Inventory.Commands.UpdateInventoryCommand).Assembly);
+    opts.Discovery.IncludeAssembly(typeof(NVBM.Infrastructure.Features.Inventory.Handlers.UpdateInventoryCommandHandler).Assembly);
 });
 
+builder.Services.AddScoped<NVBM.Application.Interfaces.IInventoryRepository, NVBM.Infrastructure.Repositories.InventoryRepository>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(options =>
 {
@@ -55,6 +68,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseMiddleware<ConcurrencyExceptionMiddleware>();
 
 app.UseHttpsRedirection();

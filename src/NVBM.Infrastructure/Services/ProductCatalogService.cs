@@ -8,47 +8,18 @@ namespace NVBM.Infrastructure.Services;
 
 public class ProductCatalogService : IProductCatalogService
 {
-    private readonly NVBMDbContext _dbContext;
+    private readonly IProductRepository _repository;
     private readonly IEventPublisher _eventPublisher;
 
-    public ProductCatalogService(NVBMDbContext dbContext, IEventPublisher eventPublisher)
+    public ProductCatalogService(IProductRepository repository, IEventPublisher eventPublisher)
     {
-        _dbContext = dbContext;
+        _repository = repository;
         _eventPublisher = eventPublisher;
     }
 
     public async Task<PagedResponse<ProductListDto>> GetProductsAsync(int page, int pageSize, Guid? categoryId, string? searchTerm)
     {
-        var query = _dbContext.Products
-            .AsNoTracking()
-            .Where(p => p.IsActive)
-            .AsQueryable();
-
-        if (categoryId.HasValue)
-        {
-            query = query.Where(p => p.CategoryId == categoryId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            query = query.Where(p => p.Name.Contains(searchTerm) || p.Sku.Contains(searchTerm));
-        }
-
-        var totalCount = await query.CountAsync();
-
-        var items = await query
-            .OrderBy(p => p.Name)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(p => new ProductListDto
-            {
-                Id = p.Id,
-                Sku = p.Sku,
-                Name = p.Name,
-                CategoryName = p.Category!.Name,
-                MinPrice = p.Uoms.Any() ? p.Uoms.Min(u => u.Price) : 0
-            })
-            .ToListAsync();
+        var (totalCount, items) = await _repository.GetProductsAsync(page, pageSize, categoryId, searchTerm);
 
         return new PagedResponse<ProductListDto>
         {
@@ -61,32 +32,7 @@ public class ProductCatalogService : IProductCatalogService
 
     public async Task<ProductDetailDto?> GetProductByIdAsync(Guid id)
     {
-        return await _dbContext.Products
-            .AsNoTracking()
-            .Where(p => p.Id == id && p.IsActive)
-            .Select(p => new ProductDetailDto
-            {
-                Id = p.Id,
-                Sku = p.Sku,
-                Name = p.Name,
-                Description = p.Description,
-                BaseUom = p.Uoms.Any(u => u.ConversionFactor == 1m) ? p.Uoms.FirstOrDefault(u => u.ConversionFactor == 1m)!.UomCode : string.Empty,
-                AvailableUnits = p.Uoms.Select(u => new ProductUomDto
-                {
-                    Id = u.Id,
-                    UomCode = u.UomCode,
-                    UomName = u.UomName,
-                    Price = u.Price,
-                    ConversionFactor = u.ConversionFactor,
-                    IsDefault = u.ConversionFactor == 1m
-                }).ToList(),
-                Attributes = p.Attributes.Select(a => new ProductAttributeDto
-                {
-                    Key = a.Key,
-                    Value = a.Value
-                }).ToList()
-            })
-            .FirstOrDefaultAsync();
+        return await _repository.GetProductDetailByIdAsync(id);
     }
 
     public async Task<Guid> CreateProductAsync(CreateProductDto dto)
@@ -115,8 +61,8 @@ public class ProductCatalogService : IProductCatalogService
             }).ToList()
         };
 
-        _dbContext.Products.Add(product);
-        await _dbContext.SaveChangesAsync();
+        _repository.Add(product);
+        await _repository.SaveChangesAsync();
         
         await _eventPublisher.PublishProductChangedEventAsync(product.Id, "Created");
         
@@ -125,10 +71,7 @@ public class ProductCatalogService : IProductCatalogService
 
     public async Task<bool> UpdateProductAsync(Guid id, UpdateProductDto dto)
     {
-        var product = await _dbContext.Products
-            .Include(p => p.Uoms)
-            .Include(p => p.Attributes)
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+        var product = await _repository.GetProductByIdAsync(id, includeDetails: true);
 
         if (product == null) return false;
 
@@ -138,7 +81,7 @@ public class ProductCatalogService : IProductCatalogService
         product.CategoryId = dto.CategoryId;
 
         // EAV and UOM list replacement strategy
-        _dbContext.ProductUoms.RemoveRange(product.Uoms);
+        _repository.RemoveUoms(product.Uoms);
         product.Uoms = dto.Uoms.Select(u => new ProductUom
         {
             Id = Guid.NewGuid(),
@@ -148,7 +91,7 @@ public class ProductCatalogService : IProductCatalogService
             ConversionFactor = u.ConversionFactor
         }).ToList();
 
-        _dbContext.ProductAttributes.RemoveRange(product.Attributes);
+        _repository.RemoveAttributes(product.Attributes);
         product.Attributes = dto.Attributes.Select(a => new ProductAttribute
         {
             Id = Guid.NewGuid(),
@@ -156,7 +99,7 @@ public class ProductCatalogService : IProductCatalogService
             Value = a.Value
         }).ToList();
 
-        await _dbContext.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
         
         await _eventPublisher.PublishProductChangedEventAsync(product.Id, "Updated");
         
@@ -165,15 +108,14 @@ public class ProductCatalogService : IProductCatalogService
 
     public async Task<bool> DeleteProductAsync(Guid id)
     {
-        var product = await _dbContext.Products
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+        var product = await _repository.GetProductByIdAsync(id);
 
         if (product == null) return false;
 
         // Soft Delete
         product.IsActive = false;
         
-        await _dbContext.SaveChangesAsync();
+        await _repository.SaveChangesAsync();
         
         await _eventPublisher.PublishProductChangedEventAsync(product.Id, "Deleted");
         
