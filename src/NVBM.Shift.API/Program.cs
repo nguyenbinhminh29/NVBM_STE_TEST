@@ -26,12 +26,26 @@ builder.Host.UseWolverine(opts =>
 {
     opts.UseFluentValidation();
     opts.Discovery.IncludeAssembly(typeof(OpenShiftCommand).Assembly);
-    opts.Discovery.IncludeAssembly(typeof(NVBM.Infrastructure.Features.Shift.Handlers.ShiftCommandHandlers).Assembly);
+    opts.Discovery.IncludeAssembly(typeof(NVBM.Infrastructure.Features.Shift.Handlers.ShiftCommandHandler).Assembly);
+    opts.Discovery.IncludeType<NVBM.Infrastructure.Features.Shift.Handlers.ShiftCommandHandler>();
 });
 
 builder.Services.AddValidatorsFromAssemblyContaining<OpenShiftCommandValidator>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
+
+app.UseCors("AllowAll");
 
 app.MapDefaultEndpoints();
 
@@ -45,7 +59,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseAuthorization();
 app.UseGlobalExceptionHandler(); // Use custom exception handler
 

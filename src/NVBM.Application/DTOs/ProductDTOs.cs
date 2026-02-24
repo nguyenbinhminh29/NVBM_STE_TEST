@@ -51,6 +51,7 @@ public record ProductListDto
     public string Name { get; init; } = string.Empty;
     public string CategoryName { get; init; } = string.Empty;
     public decimal MinPrice { get; init; }
+    public Guid BaseUomId { get; init; }
 }
 
 public record ProductDetailDto

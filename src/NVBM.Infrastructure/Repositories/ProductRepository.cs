@@ -44,7 +44,10 @@ public class ProductRepository : IProductRepository
                 Sku = p.Sku,
                 Name = p.Name,
                 CategoryName = p.Category!.Name,
-                MinPrice = p.Uoms.Any() ? p.Uoms.Min(u => u.Price) : 0
+                MinPrice = p.Uoms.Any() ? p.Uoms.Min(u => u.Price) : 0,
+                BaseUomId = p.Uoms.Any(u => u.ConversionFactor == 1m) 
+                    ? p.Uoms.First(u => u.ConversionFactor == 1m).Id 
+                    : (p.Uoms.Any() ? p.Uoms.First().Id : Guid.Empty)
             })
             .ToListAsync(cancellationToken);
 

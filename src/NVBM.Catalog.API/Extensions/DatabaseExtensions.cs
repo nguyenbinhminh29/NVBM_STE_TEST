@@ -20,16 +20,23 @@ public static class DatabaseExtensions
 
     private static async Task SeedDataAsync(NVBMDbContext context)
     {
-        if (await context.Categories.AnyAsync())
-            return; // Already seeded
-
-        var category = new Category
+        var targetCategoryId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        if (!await context.Categories.AnyAsync(c => c.Id == targetCategoryId))
         {
-            Id = Guid.NewGuid(),
-            Name = "Beverages",
-            Description = "Drinks and liquids."
-        };
-        await context.Categories.AddAsync(category);
+            var newCategory = new Category
+            {
+                Id = targetCategoryId,
+                Name = "Beverages",
+                Description = "Drinks and liquids."
+            };
+            await context.Categories.AddAsync(newCategory);
+            await context.SaveChangesAsync();
+        }
+
+        if (await context.Products.AnyAsync())
+            return; // Already seeded products
+
+        var category = await context.Categories.FirstAsync(c => c.Id == targetCategoryId);
 
         var product = new Product
         {

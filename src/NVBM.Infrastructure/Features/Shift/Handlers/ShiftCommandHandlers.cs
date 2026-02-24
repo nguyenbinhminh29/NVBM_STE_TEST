@@ -5,7 +5,7 @@ using NVBM.Domain.Entities;
 
 namespace NVBM.Infrastructure.Features.Shift.Handlers;
 
-public class ShiftCommandHandlers
+public class ShiftCommandHandler
 {
     public async Task<APIResponse<ShiftResponseDto>> Handle(OpenShiftCommand command, IShiftRepository repository, CancellationToken cancellationToken)
     {

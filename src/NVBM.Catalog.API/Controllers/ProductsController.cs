@@ -18,7 +18,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    [OutputCache(Duration = 300)]
+    // [OutputCache(Duration = 300)]
     [EnableRateLimiting("fixed")]
     public async Task<ActionResult<APIResponse<PagedResponse<ProductListDto>>>> GetProducts(
         [FromQuery] int page = 1, 
