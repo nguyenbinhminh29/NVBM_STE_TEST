@@ -14,6 +14,7 @@ public class NVBMDbContext : DbContext
     public DbSet<ProductUom> ProductUoms => Set<ProductUom>();
     public DbSet<ProductBarcode> ProductBarcodes => Set<ProductBarcode>();
     public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
+    public DbSet<InventoryLevel> InventoryLevels => Set<InventoryLevel>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

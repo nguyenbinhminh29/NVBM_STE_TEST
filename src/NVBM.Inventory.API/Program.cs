@@ -1,14 +1,8 @@
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
-using NVBM.Application.Interfaces;
 using NVBM.Infrastructure.Data;
-using NVBM.Infrastructure.Services;
 using Scalar.AspNetCore;
-using NVBM.Catalog.API.Extensions;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using NVBM.Application.DTOs;
-using MassTransit;
+using NVBM.Inventory.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +12,8 @@ builder.AddServiceDefaults();
 // Database
 builder.AddSqlServerDbContext<NVBMDbContext>("grocerydb");
 
-// Cache
-builder.AddRedisOutputCache("cache");
+// Distributed Cache for Idempotency
+builder.AddRedisDistributedCache("cache");
 
 // Rate Limiting
 builder.Services.AddRateLimiter(options =>
@@ -32,21 +26,11 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// Add services to the container.
-builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
-builder.Services.AddFluentValidationAutoValidation();
-
-builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
-builder.Services.AddScoped<IProductCatalogService, ProductCatalogService>();
-
-// MassTransit
-builder.Services.AddMassTransit(x =>
+// MediatR
+builder.Services.AddMediatR(cfg => 
 {
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host(builder.Configuration.GetConnectionString("messaging") ?? "localhost");
-        cfg.ConfigureEndpoints(context);
-    });
+    cfg.RegisterServicesFromAssembly(typeof(NVBM.Application.Features.Inventory.Commands.UpdateInventoryCommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(NVBM.Infrastructure.Features.Inventory.Handlers.UpdateInventoryCommandHandler).Assembly);
 });
 
 builder.Services.AddControllers();
@@ -54,9 +38,9 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        document.Info.Title = "NVBM Product Catalog API";
+        document.Info.Title = "NVBM Inventory API";
         document.Info.Version = "v1";
-        document.Info.Description = "API for Product Catalog Management.";
+        document.Info.Description = "API for handling high-throughput Inventory operations.";
         return Task.CompletedTask;
     });
 });
@@ -71,12 +55,11 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+app.UseMiddleware<ConcurrencyExceptionMiddleware>();
+
 app.UseHttpsRedirection();
-app.UseOutputCache();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
-
-await app.ApplyMigrationsAndSeedAsync();
 
 app.Run();

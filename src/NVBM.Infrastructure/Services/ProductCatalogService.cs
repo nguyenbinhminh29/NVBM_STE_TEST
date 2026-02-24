@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using NVBM.Application.DTOs;
 using NVBM.Application.Interfaces;
+using NVBM.Domain.Entities;
 using NVBM.Infrastructure.Data;
 
 namespace NVBM.Infrastructure.Services;
@@ -8,16 +9,19 @@ namespace NVBM.Infrastructure.Services;
 public class ProductCatalogService : IProductCatalogService
 {
     private readonly NVBMDbContext _dbContext;
+    private readonly IEventPublisher _eventPublisher;
 
-    public ProductCatalogService(NVBMDbContext dbContext)
+    public ProductCatalogService(NVBMDbContext dbContext, IEventPublisher eventPublisher)
     {
         _dbContext = dbContext;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<PagedResponse<ProductListDto>> GetProductsAsync(int page, int pageSize, Guid? categoryId, string? searchTerm)
     {
         var query = _dbContext.Products
             .AsNoTracking()
+            .Where(p => p.IsActive)
             .AsQueryable();
 
         if (categoryId.HasValue)
@@ -59,7 +63,7 @@ public class ProductCatalogService : IProductCatalogService
     {
         return await _dbContext.Products
             .AsNoTracking()
-            .Where(p => p.Id == id)
+            .Where(p => p.Id == id && p.IsActive)
             .Select(p => new ProductDetailDto
             {
                 Id = p.Id,
@@ -80,5 +84,96 @@ public class ProductCatalogService : IProductCatalogService
                 }).ToList()
             })
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<Guid> CreateProductAsync(CreateProductDto dto)
+    {
+        var product = new Product
+        {
+            Id = Guid.NewGuid(),
+            Sku = dto.Sku,
+            Name = dto.Name,
+            Description = dto.Description,
+            CategoryId = dto.CategoryId,
+            IsActive = true,
+            Uoms = dto.Uoms.Select(u => new ProductUom
+            {
+                Id = Guid.NewGuid(),
+                UomCode = u.UomCode,
+                UomName = u.UomName,
+                Price = u.Price,
+                ConversionFactor = u.ConversionFactor
+            }).ToList(),
+            Attributes = dto.Attributes.Select(a => new ProductAttribute
+            {
+                Id = Guid.NewGuid(),
+                Key = a.Key,
+                Value = a.Value
+            }).ToList()
+        };
+
+        _dbContext.Products.Add(product);
+        await _dbContext.SaveChangesAsync();
+        
+        await _eventPublisher.PublishProductChangedEventAsync(product.Id, "Created");
+        
+        return product.Id;
+    }
+
+    public async Task<bool> UpdateProductAsync(Guid id, UpdateProductDto dto)
+    {
+        var product = await _dbContext.Products
+            .Include(p => p.Uoms)
+            .Include(p => p.Attributes)
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+
+        if (product == null) return false;
+
+        product.Sku = dto.Sku;
+        product.Name = dto.Name;
+        product.Description = dto.Description;
+        product.CategoryId = dto.CategoryId;
+
+        // EAV and UOM list replacement strategy
+        _dbContext.ProductUoms.RemoveRange(product.Uoms);
+        product.Uoms = dto.Uoms.Select(u => new ProductUom
+        {
+            Id = Guid.NewGuid(),
+            UomCode = u.UomCode,
+            UomName = u.UomName,
+            Price = u.Price,
+            ConversionFactor = u.ConversionFactor
+        }).ToList();
+
+        _dbContext.ProductAttributes.RemoveRange(product.Attributes);
+        product.Attributes = dto.Attributes.Select(a => new ProductAttribute
+        {
+            Id = Guid.NewGuid(),
+            Key = a.Key,
+            Value = a.Value
+        }).ToList();
+
+        await _dbContext.SaveChangesAsync();
+        
+        await _eventPublisher.PublishProductChangedEventAsync(product.Id, "Updated");
+        
+        return true;
+    }
+
+    public async Task<bool> DeleteProductAsync(Guid id)
+    {
+        var product = await _dbContext.Products
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+
+        if (product == null) return false;
+
+        // Soft Delete
+        product.IsActive = false;
+        
+        await _dbContext.SaveChangesAsync();
+        
+        await _eventPublisher.PublishProductChangedEventAsync(product.Id, "Deleted");
+        
+        return true;
     }
 }

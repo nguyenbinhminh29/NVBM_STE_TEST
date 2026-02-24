@@ -11,12 +11,4 @@ public record BarcodeLookupResponse
     public decimal ConversionFactor { get; init; }
 }
 
-public record APIResponse<T>
-{
-    public bool Success { get; init; }
-    public T? Data { get; init; }
-    public string Message { get; init; } = string.Empty;
 
-    public static APIResponse<T> Ok(T data, string message = "Success") => new() { Success = true, Data = data, Message = message };
-    public static APIResponse<T> Fail(string message) => new() { Success = false, Message = message };
-}

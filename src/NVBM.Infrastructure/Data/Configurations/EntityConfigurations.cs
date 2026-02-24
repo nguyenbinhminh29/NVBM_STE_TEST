@@ -17,6 +17,8 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(x => x.Sku).IsUnique();
         builder.HasIndex(x => x.CategoryId);
 
+        builder.HasQueryFilter(x => x.IsActive);
+
         builder.HasOne(x => x.Category)
                .WithMany(x => x.Products)
                .HasForeignKey(x => x.CategoryId);
