@@ -1,0 +1,82 @@
+{
+    "info": {
+        "_postman_id": "b0a6e8b4-9273-4556-9a5c-56784bb5ebbf",
+        "name": "NVBM_Promotion_API_Test",
+        "description": "Bộ mô phỏng API Truyền tải dữ liệu Giỏ hàng POS xuống thư viện của Promotion Engine API để kiểm tra chức năng tính Khuyến Mãi và Chiết Khấu.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Test Hóa đơn Đủ điều kiện KM (Mua 3 S?a)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"items\": [\r\n        {\r\n            \"productId\": \"c0339afd-3217-43a3-a4dd-895b22733be4\",\r\n            \"uomId\": \"<<S?a_UOM_ID_MOCK>>\",\r\n            \"quantity\": 3\r\n        },\r\n        {\r\n            \"productId\": \"<<RAU_PRODUCT_ID_MOCK>>\",\r\n            \"uomId\": \"<<RAU_UOM_ID_MOCK>>\",\r\n            \"quantity\": 1\r\n        }\r\n    ]\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "https://localhost:8000/api/v1/Orders/calculate",
+                    "protocol": "https",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "v1",
+                        "Orders",
+                        "calculate"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "2. Test Hóa đơn KHÔNG đủ điều kiện (Mua 1 S?a)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"items\": [\r\n        {\r\n            \"productId\": \"c0339afd-3217-43a3-a4dd-895b22733be4\",\r\n            \"uomId\": \"<<S?a_UOM_ID_MOCK>>\",\r\n            \"quantity\": 1\r\n        }\r\n    ]\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "https://localhost:8000/api/v1/Orders/calculate",
+                    "protocol": "https",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "v1",
+                        "Orders",
+                        "calculate"
+                    ]
+                }
+            },
+            "response": []
+        }
+    ]
+}

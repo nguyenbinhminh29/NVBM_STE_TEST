@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NVBM.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using NVBM.Infrastructure.Data;
 namespace NVBM.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(NVBMDbContext))]
-    partial class NVBMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260224081439_AddShiftManagement")]
+    partial class AddShiftManagement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

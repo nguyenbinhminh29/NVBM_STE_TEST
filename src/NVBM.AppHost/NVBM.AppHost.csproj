@@ -23,6 +23,8 @@
     <ProjectReference Include="..\NVBM.Barcode.API\NVBM.Barcode.API.csproj" />
     <ProjectReference Include="..\NVBM.Gateway\NVBM.Gateway.csproj" />
     <ProjectReference Include="..\NVBM.Inventory.API\NVBM.Inventory.API.csproj" />
+    <ProjectReference Include="..\NVBM.Promotion.API\NVBM.Promotion.API.csproj" />
+    <ProjectReference Include="..\NVBM.Shift.API\NVBM.Shift.API.csproj" />
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NVBM.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using NVBM.Infrastructure.Data;
 namespace NVBM.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(NVBMDbContext))]
-    partial class NVBMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260224071156_AddPromotions")]
+    partial class AddPromotions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,28 +66,6 @@ namespace NVBM.Infrastructure.Data.Migrations
                     b.HasKey("ProductId");
 
                     b.ToTable("InventoryLevels");
-                });
-
-            modelBuilder.Entity("NVBM.Domain.Entities.PaymentMethod", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsCash")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PaymentMethods");
                 });
 
             modelBuilder.Entity("NVBM.Domain.Entities.Product", b =>
@@ -294,83 +275,6 @@ namespace NVBM.Infrastructure.Data.Migrations
                     b.ToTable("PromotionRules");
                 });
 
-            modelBuilder.Entity("NVBM.Domain.Entities.Shift", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal?>("ActualCash")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("CloseTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("ExpectedCash")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("OpenTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PosDeviceId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal>("StartingCash")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<decimal>("TotalCashReceived")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TotalSalesAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Shifts");
-                });
-
-            modelBuilder.Entity("NVBM.Domain.Entities.ShiftTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<Guid>("ShiftId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("TransactionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("TransactionType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ShiftId");
-
-                    b.ToTable("ShiftTransactions");
-                });
-
             modelBuilder.Entity("NVBM.Domain.Entities.InventoryLevel", b =>
                 {
                     b.HasOne("NVBM.Domain.Entities.Product", "Product")
@@ -456,17 +360,6 @@ namespace NVBM.Infrastructure.Data.Migrations
                     b.Navigation("Promotion");
                 });
 
-            modelBuilder.Entity("NVBM.Domain.Entities.ShiftTransaction", b =>
-                {
-                    b.HasOne("NVBM.Domain.Entities.Shift", "Shift")
-                        .WithMany("Transactions")
-                        .HasForeignKey("ShiftId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Shift");
-                });
-
             modelBuilder.Entity("NVBM.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
@@ -484,11 +377,6 @@ namespace NVBM.Infrastructure.Data.Migrations
                     b.Navigation("Actions");
 
                     b.Navigation("Rules");
-                });
-
-            modelBuilder.Entity("NVBM.Domain.Entities.Shift", b =>
-                {
-                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

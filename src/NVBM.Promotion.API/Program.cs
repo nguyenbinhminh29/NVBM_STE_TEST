@@ -1,17 +1,14 @@
-using Microsoft.AspNetCore.RateLimiting;
-using System.Threading.RateLimiting;
 using NVBM.Application.Interfaces;
 using NVBM.Infrastructure.Data;
 using NVBM.Infrastructure.Services;
 using Scalar.AspNetCore;
-using NVBM.Catalog.API.Extensions;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using NVBM.Application.DTOs;
+using Serilog;
 using Wolverine;
 using Wolverine.FluentValidation;
-using Serilog;
-using NVBM.Catalog.API.Middleware;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using NVBM.Promotion.API.Middleware;
+using NVBM.Promotion.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,35 +26,20 @@ builder.AddServiceDefaults();
 builder.AddSqlServerDbContext<NVBMDbContext>("grocerydb");
 
 // Cache
+builder.Services.AddMemoryCache();
 builder.AddRedisOutputCache("cache");
 
-// Rate Limiting
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddFixedWindowLimiter("fixed", opt =>
-    {
-        opt.PermitLimit = 100;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueLimit = 0;
-    });
-});
-
-// Add services to the container.
-builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();
-builder.Services.AddFluentValidationAutoValidation();
-
-builder.Services.AddMemoryCache();
+// Services Register
 builder.Services.AddScoped<IProductRepository, NVBM.Infrastructure.Repositories.ProductRepository>();
 builder.Services.AddScoped<IPromotionRepository, NVBM.Infrastructure.Repositories.PromotionRepository>();
-builder.Services.AddScoped<IPromotionEngine, NVBM.Infrastructure.Services.PromotionEngine>();
-builder.Services.AddScoped<IEventPublisher, WolverineEventPublisher>();
-builder.Services.AddScoped<IProductCatalogService, ProductCatalogService>();
+builder.Services.AddScoped<IPromotionEngine, PromotionEngine>();
 
 // Wolverine
 builder.Host.UseWolverine(opts => 
 {
     opts.UseFluentValidation();
-    // Configure rabbitmq or endpoints later
+    opts.Discovery.IncludeAssembly(typeof(NVBM.Application.Features.Sales.Queries.CalculateOrderQuery).Assembly);
+    opts.Discovery.IncludeAssembly(typeof(NVBM.Infrastructure.Features.Sales.Handlers.CalculateOrderQueryHandler).Assembly);
 });
 
 builder.Services.AddControllers();
@@ -65,9 +47,9 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        document.Info.Title = "NVBM Product Catalog API";
+        document.Info.Title = "NVBM Promotion API";
         document.Info.Version = "v1";
-        document.Info.Description = "API for Product Catalog Management.";
+        document.Info.Description = "API for Promotion Rules Engine and Order Calculation.";
         return Task.CompletedTask;
     });
 });
@@ -81,14 +63,14 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseOutputCache();
-app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 
-await app.ApplyMigrationsAndSeedAsync();
+await app.SeedPromotionDataAsync();
 
 app.Run();

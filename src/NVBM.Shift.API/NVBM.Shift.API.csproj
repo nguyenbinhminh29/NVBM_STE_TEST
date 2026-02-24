@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="13.1.1" />
+    <PackageReference Include="Aspire.StackExchange.Redis.OutputCaching" Version="13.1.1" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.13" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.0.14" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="WolverineFx" Version="5.16.2" />
+    <PackageReference Include="WolverineFx.FluentValidation" Version="5.16.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NVBM.Domain\NVBM.Domain.csproj" />
+    <ProjectReference Include="..\NVBM.Application\NVBM.Application.csproj" />
+    <ProjectReference Include="..\NVBM.Infrastructure\NVBM.Infrastructure.csproj" />
+    <ProjectReference Include="..\NVBM.ServiceDefaults\NVBM.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

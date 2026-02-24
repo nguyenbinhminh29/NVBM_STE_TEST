@@ -20,10 +20,22 @@ var inventoryApi = builder.AddProject<Projects.NVBM_Inventory_API>("inventory-ap
        .WithReference(cache)
        .WithReference(rabbitmq);
 
+var promotionApi = builder.AddProject<Projects.NVBM_Promotion_API>("promotion-api")
+       .WithReference(groceryDb)
+       .WithReference(cache)
+       .WithReference(rabbitmq);
+
+var shiftApi = builder.AddProject<Projects.NVBM_Shift_API>("shift-api")
+       .WithReference(groceryDb)
+       .WithReference(cache)
+       .WithReference(rabbitmq);
+
 builder.AddProject<Projects.NVBM_Gateway>("gateway")
        .WithReference(catalogApi)
        .WithReference(barcodeApi)
        .WithReference(inventoryApi)
+       .WithReference(promotionApi)
+       .WithReference(shiftApi)
        .WithExternalHttpEndpoints();
 
 builder.Build().Run();
