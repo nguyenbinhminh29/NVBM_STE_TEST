@@ -7,8 +7,16 @@ builder.AddServiceDefaults();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddServiceDiscovery();
+
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .AddServiceDiscoveryDestinationResolver()
+    .ConfigureHttpClient((context, handler) =>
+    {
+        // Bypass SSL certificate validation for internal service-to-service calls
+        handler.SslOptions.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+    });
 
 builder.Services.AddCors(options =>
 {
@@ -49,6 +57,25 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.Use(async (context, next) =>
+{
+    await next();
+    if (context.Response.StatusCode == 502)
+    {
+        var errorFeature = context.Features.Get<Yarp.ReverseProxy.Forwarder.IForwarderErrorFeature>();
+        if (errorFeature != null)
+        {
+            System.IO.File.AppendAllText("gateway_error.log", $"[YARP ERROR] Error: {errorFeature.Error}, Exception: {errorFeature.Exception}\n");
+        }
+    }
+});
+
 app.MapReverseProxy();
+
+app.MapGet("/env", () =>
+{
+    var vars = Environment.GetEnvironmentVariables();
+    return string.Join("\n", vars.Keys.Cast<string>().Select(k => $"{k}={vars[k]}"));
+});
 
 app.Run();

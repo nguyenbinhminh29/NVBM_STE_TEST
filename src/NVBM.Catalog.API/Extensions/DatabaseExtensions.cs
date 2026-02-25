@@ -12,6 +12,7 @@ public static class DatabaseExtensions
         var dbContext = scope.ServiceProvider.GetRequiredService<NVBMDbContext>();
 
         // Apply Migrations
+        dbContext.Database.SetCommandTimeout(120);
         await dbContext.Database.MigrateAsync();
 
         // Seed Data

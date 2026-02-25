@@ -28,7 +28,9 @@ public class BarcodeService : IBarcodeService
                 UomCode = b.Uom!.UomCode,
                 UomName = b.Uom.UomName,
                 Price = b.Uom.Price,
-                ConversionFactor = b.Uom.ConversionFactor
+                ConversionFactor = b.Uom.ConversionFactor,
+                ProductId = b.ProductId,
+                UomId = b.UomId
             })
             .FirstOrDefaultAsync();
     }

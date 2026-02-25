@@ -11,12 +11,12 @@ namespace NVBM.UnitTests.Handlers;
 public class ShiftCommandHandlersTests
 {
     private readonly Mock<IShiftRepository> _repositoryMock;
-    private readonly ShiftCommandHandlers _handler;
+    private readonly ShiftCommandHandler _handler;
 
     public ShiftCommandHandlersTests()
     {
         _repositoryMock = new Mock<IShiftRepository>();
-        _handler = new ShiftCommandHandlers();
+        _handler = new ShiftCommandHandler();
     }
 
     [Fact]

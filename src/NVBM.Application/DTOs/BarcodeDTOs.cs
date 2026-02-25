@@ -9,6 +9,6 @@ public record BarcodeLookupResponse
     public string UomName { get; init; } = string.Empty;
     public decimal Price { get; init; }
     public decimal ConversionFactor { get; init; }
+    public Guid ProductId { get; init; }
+    public Guid UomId { get; init; }
 }
-
-
